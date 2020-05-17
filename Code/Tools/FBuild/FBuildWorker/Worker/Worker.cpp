@@ -135,7 +135,15 @@ int32_t Worker::Work()
     // Run the UI message loop if we're not in console mode
     if ( m_MainWindow )
     {
-        m_MainWindow->Work(); // Blocks until exit
+        bool isWorkerRunning = true;
+        do
+        {
+            m_MainWindow->Work(); // Blocks until exit
+
+            // We should now exit but we need to ensure the UI still pumps messages if 
+            // the worker hasn't finished to avoid a deadlock
+            Thread::WaitForThread( m_WorkThread, 1, isWorkerRunning );
+        } while ( isWorkerRunning );
     }
 
     // Join work thread and get exit code
